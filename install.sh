@@ -25,7 +25,7 @@ launchctl bootstrap gui/$(id -u) "$PLIST_DIR/$PLIST_NAME" 2>/dev/null \
 
 echo "安装完成！"
 echo "  脚本: $BIN_DIR/upgrade-all.sh"
-echo "  定时: $PLIST_DIR/$PLIST_NAME (每天 21:00)"
+echo "  定时: $PLIST_DIR/$PLIST_NAME (每天 12:00)"
 echo ""
 echo "手动执行: bash $BIN_DIR/upgrade-all.sh"
 echo "查看日志: tail -f ~/.local/log/upgrade-all.log"
