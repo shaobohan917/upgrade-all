@@ -3,6 +3,9 @@
 # 用法: bash ~/.local/bin/upgrade-all.sh [--dry-run]
 
 set -euo pipefail
+
+# LaunchAgent 环境缺少 PATH，手动补充
+export PATH="/opt/homebrew/bin:/Users/luka/Library/pnpm/bin:/Users/luka/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 LOG="$HOME/.local/log/upgrade-all.log"
 mkdir -p "$(dirname "$LOG")"
 
