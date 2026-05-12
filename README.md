@@ -19,7 +19,7 @@ cd upgrade-all
 bash install.sh
 ```
 
-安装后会将脚本部署到 `~/.local/bin/`，并配置 launchd 定时任务（默认每天 12:00）。
+安装后会将脚本部署到 `~/.local/bin/`，并配置 launchd 定时任务（默认每天 12:32）。
 
 ## 使用方法
 

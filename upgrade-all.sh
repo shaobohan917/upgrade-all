@@ -4,8 +4,16 @@
 
 set -euo pipefail
 
-# LaunchAgent 环境缺少 PATH，手动补充
-export PATH="/opt/homebrew/bin:/Users/luka/Library/pnpm/bin:/Users/luka/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+# LaunchAgent 环境缺少 PATH，手动补充常用工具路径
+export PNPM_HOME="$HOME/Library/pnpm"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PNPM_HOME/bin:$HOME/.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# 加载 Homebrew 环境变量（兼容 Apple Silicon 与 Intel Mac）
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
+elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null || true
+fi
 LOG="$HOME/.local/log/upgrade-all.log"
 mkdir -p "$(dirname "$LOG")"
 
@@ -69,29 +77,35 @@ brew cleanup --prune=30 2>&1 | tee -a "$LOG" || true
 
 # npm 全局包 (逐个升级，避免 npm update -g 的平台依赖问题)
 log "--- npm ---"
-NPM_RESULT=""
-SKIP_PKGS="happy-coder"
-while read -r pkg; do
-    if echo "$SKIP_PKGS" | grep -qw "$pkg"; then
-        log "[SKIP] $pkg (workspace 协议不支持全局安装)"
-        continue
+if command -v npm &>/dev/null; then
+    NPM_RESULT=""
+    SKIP_PKGS="happy-coder"
+    while read -r pkg; do
+        if echo "$SKIP_PKGS" | grep -qw "$pkg"; then
+            log "[SKIP] $pkg (workspace 协议不支持全局安装)"
+            continue
+        fi
+        NPM_OUT=$(npm install -g "${pkg}@latest" 2>&1 | tee -a "$LOG" || true)
+        if echo "$NPM_OUT" | grep -q "added\|changed\|removed"; then
+            NPM_RESULT+="$pkg "
+        fi
+    done < <({ npm outdated -g 2>/dev/null || true; } | tail -n +2 | awk '{print $1}')
+    if [[ -n "$NPM_RESULT" ]]; then
+        RESULT+="npm 已升级: $NPM_RESULT\n"
     fi
-    NPM_OUT=$(npm install -g "${pkg}@latest" 2>&1 | tee -a "$LOG" || true)
-    if echo "$NPM_OUT" | grep -q "added\|changed\|removed"; then
-        NPM_RESULT+="$pkg "
-    fi
-done < <({ npm outdated -g 2>/dev/null || true; } | tail -n +2 | awk '{print $1}')
-if [[ -n "$NPM_RESULT" ]]; then
-    RESULT+="npm 已升级: $NPM_RESULT\n"
+else
+    log "[SKIP] npm 未安装"
 fi
 
 # pnpm
 log "--- pnpm ---"
-export PNPM_HOME="$HOME/Library/pnpm"
-export PATH="$PNPM_HOME/bin:$PATH"
-PNPM_OUT=$(pnpm add -g pnpm@latest 2>&1 | tee -a "$LOG" || true)
-if echo "$PNPM_OUT" | grep -q "Done\|updated"; then
-    RESULT+="pnpm 已升级\n"
+if command -v pnpm &>/dev/null; then
+    PNPM_OUT=$(pnpm add -g pnpm@latest 2>&1 | tee -a "$LOG" || true)
+    if echo "$PNPM_OUT" | grep -q "Done\|updated"; then
+        RESULT+="pnpm 已升级\n"
+    fi
+else
+    log "[SKIP] pnpm 未安装"
 fi
 
 # Rust / Cargo
