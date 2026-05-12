@@ -11,13 +11,13 @@
         <string>/Users/luka/.local/bin/upgrade-all.sh</string>
     </array>
 
-    <!-- 每天 12:32 执行 -->
+    <!-- 每天 12:00 执行 -->
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
         <integer>12</integer>
         <key>Minute</key>
-        <integer>32</integer>
+        <integer>0</integer>
     </dict>
 
     <key>StandardOutPath</key>
