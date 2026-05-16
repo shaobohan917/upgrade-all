@@ -68,11 +68,18 @@ log "========== 升级开始 =========="
 # Homebrew
 log "--- Homebrew ---"
 brew update 2>&1 | tee -a "$LOG" || true
+BREW_FORMULA_NAMES=$(brew outdated --formula 2>/dev/null | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//' || true)
 BREW_UPGRADE=$(brew upgrade 2>&1 | tee -a "$LOG" || true)
-if [[ -n "$BREW_UPGRADE" ]] && echo "$BREW_UPGRADE" | grep -q "Upgraded\|Installing\|Pouring"; then
-    RESULT+="Homebrew 已升级\n"
+if [[ -n "$BREW_FORMULA_NAMES" ]] && echo "$BREW_UPGRADE" | grep -q "Upgraded\|Installing\|Pouring"; then
+    RESULT+="Homebrew 已升级: $BREW_FORMULA_NAMES\n"
 fi
-brew upgrade --cask 2>&1 | tee -a "$LOG" || true
+
+BREW_CASK_NAMES=$(brew outdated --cask 2>/dev/null | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//' || true)
+BREW_CASK_UPGRADE=$(brew upgrade --cask 2>&1 | tee -a "$LOG" || true)
+if [[ -n "$BREW_CASK_NAMES" ]] && echo "$BREW_CASK_UPGRADE" | grep -q "Upgraded\|Pouring\|Installing"; then
+    RESULT+="Homebrew Cask 已升级: $BREW_CASK_NAMES\n"
+fi
+
 brew cleanup --prune=30 2>&1 | tee -a "$LOG" || true
 
 # npm 全局包 (逐个升级，避免 npm update -g 的平台依赖问题)
