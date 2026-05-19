@@ -70,13 +70,13 @@ log "--- Homebrew ---"
 brew update 2>&1 | tee -a "$LOG" || true
 BREW_FORMULA_NAMES=$(brew outdated --formula 2>/dev/null | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//' || true)
 BREW_UPGRADE=$(brew upgrade 2>&1 | tee -a "$LOG" || true)
-if [[ -n "$BREW_FORMULA_NAMES" ]] && echo "$BREW_UPGRADE" | grep -q "Upgraded\|Installing\|Pouring"; then
+if [[ -n "$BREW_FORMULA_NAMES" ]] && echo "$BREW_UPGRADE" | grep -qE "Upgrad|Pouring|Installing"; then
     RESULT+="Homebrew 已升级: $BREW_FORMULA_NAMES\n"
 fi
 
 BREW_CASK_NAMES=$(brew outdated --cask 2>/dev/null | awk '{print $1}' | tr '\n' ' ' | sed 's/ $//' || true)
 BREW_CASK_UPGRADE=$(brew upgrade --cask 2>&1 | tee -a "$LOG" || true)
-if [[ -n "$BREW_CASK_NAMES" ]] && echo "$BREW_CASK_UPGRADE" | grep -q "Upgraded\|Pouring\|Installing"; then
+if [[ -n "$BREW_CASK_NAMES" ]] && echo "$BREW_CASK_UPGRADE" | grep -qE "Upgrad|Pouring|Installing"; then
     RESULT+="Homebrew Cask 已升级: $BREW_CASK_NAMES\n"
 fi
 
@@ -93,7 +93,7 @@ if command -v npm &>/dev/null; then
             continue
         fi
         NPM_OUT=$(npm install -g "${pkg}@latest" 2>&1 | tee -a "$LOG" || true)
-        if echo "$NPM_OUT" | grep -q "added\|changed\|removed"; then
+        if echo "$NPM_OUT" | grep -qE "added|changed|removed"; then
             NPM_RESULT+="$pkg "
         fi
     done < <({ npm outdated -g 2>/dev/null || true; } | tail -n +2 | awk '{print $1}')
@@ -108,7 +108,7 @@ fi
 log "--- pnpm ---"
 if command -v pnpm &>/dev/null; then
     PNPM_OUT=$(pnpm add -g pnpm@latest 2>&1 | tee -a "$LOG" || true)
-    if echo "$PNPM_OUT" | grep -q "Done\|updated"; then
+    if echo "$PNPM_OUT" | grep -qE "Done|updated"; then
         RESULT+="pnpm 已升级\n"
     fi
 else
@@ -119,7 +119,7 @@ fi
 log "--- Cargo ---"
 if command -v rustup &>/dev/null; then
     CARGO_OUT=$(rustup update 2>&1 | tee -a "$LOG" || true)
-    if echo "$CARGO_OUT" | grep -q "updated\|installed"; then
+    if echo "$CARGO_OUT" | grep -qE "updated|installed"; then
         RESULT+="Rust 已升级\n"
     fi
 fi
